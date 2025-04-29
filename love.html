@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>❤️</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="heart"></canvas>
+  <audio id="backgroundMusic" loop>
+    <source src="assets/blue.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    const canvas = document.getElementById("heart");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    let t = 0;
+    let points = [];
+    let textAlpha = 0;
+
+    // Hujan bintang (warna-warni, jatuh)
+    const stars = Array.from({ length: 200 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 1.5 + 0.5,
+      alpha: Math.random(),
+      speed: Math.random() * 1 + 1,
+      color: `hsl(${Math.random() * 360}, 100%, 80%)`, // Warna acak
+    }));
+
+    function drawStars() {
+      for (const star of stars) {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fillStyle = star.color;
+        ctx.fill();
+
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = -star.r; // Mulai dari atas lagi
+          star.x = Math.random() * canvas.width; // Posisikan ulang di acak
+        }
+      }
+    }
+
+    function heartPosition(t) {
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y =
+        13 * Math.cos(t) -
+        5 * Math.cos(2 * t) -
+        2 * Math.cos(3 * t) -
+        Math.cos(4 * t);
+      return [x, -y];
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawStars(); // Gambar hujan bintang terlebih dahulu
+
+      // Skala lebih kecil untuk love
+      const pulseScale = 1 + 0.05 * Math.sin(Date.now() * 0.005);
+      const scale = Math.min(canvas.width, canvas.height) / 50 * pulseScale;  // Skala lebih kecil
+
+      // Gambar love
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const [x, y] = points[i];
+        const cx = canvas.width / 2 + x * scale;
+        const cy = canvas.height / 2 + y * scale;
+        if (i === 0) ctx.moveTo(cx, cy);
+        else ctx.lineTo(cx, cy);
+      }
+      ctx.closePath();
+
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, "#33ccff");
+      gradient.addColorStop(1, "#0000ff");
+
+      ctx.fillStyle = gradient;
+      ctx.shadowColor = "#00f";
+      ctx.shadowBlur = 25;
+      ctx.fill();
+
+      // Fade-in "Nita"
+      if (textAlpha < 1) {
+        textAlpha += 0.01;
+      }
+
+      const fontSize = 40 + 5 * Math.sin(Date.now() * 0.005);
+      ctx.font = `bold ${fontSize}px Arial`;
+      ctx.fillStyle = `rgba(255, 255, 255, ${textAlpha.toFixed(2)})`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Nita", canvas.width / 2, canvas.height / 2);
+
+      // Bangun love secara bertahap
+      if (t <= Math.PI * 2) {
+        points.push(heartPosition(t));
+        t += 0.02;
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    const music = document.getElementById("backgroundMusic");
+    document.addEventListener("click", function startMusic() {
+      music.play().catch(err => console.log("Autoplay blocked"));
+      document.removeEventListener("click", startMusic);
+    });
+  </script>
+</body>
+</html>
